@@ -2,10 +2,6 @@ const User = require("../models/User");
 const LoginHistory = require("../models/LoginHistory");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { OAuth2Client } = require("google-auth-library");
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-
 
 const tokenCreate = (user) => {
   return jwt.sign({ id: user._id, email: user.email, name: user.name }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -40,7 +36,6 @@ exports.login = async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: "Wrong password" });
 
-    // Record login history
     await LoginHistory.create({
       userId: user._id,
       email: user.email,
@@ -58,75 +53,6 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-exports.googleLogin = async (req, res) => {
-  try {
-    const { tokenId } = req.body;
-    let name, email, sub, avatar;
-
-    if (tokenId === "MOCK_TOKEN_FOR_TESTING") {
-      name = "Test Admin";
-      email = "test@inventory.com";
-      sub = "mock_google_id_12345";
-      avatar = "https://ui-avatars.com/api/?name=Test+Admin";
-    } else {
-      const ticket = await client.verifyIdToken({
-        idToken: tokenId,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      const payload = ticket.getPayload();
-      name = payload.name;
-      email = payload.email;
-      sub = payload.sub;
-      avatar = payload.picture;
-    }
-
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      user = await User.create({
-        name,
-        email,
-        googleId: sub,
-        avatar,
-        provider: "google",
-        role: "User"
-      });
-    } else {
-      // Update existing user with Google info if not already set
-      user.googleId = sub;
-      user.avatar = avatar;
-      user.provider = "google";
-      await user.save();
-    }
-
-    // Record login history
-    await LoginHistory.create({
-      userId: user._id,
-      email: user.email,
-      name: user.name,
-      ip: req.ip,
-      userAgent: req.headers["user-agent"]
-    });
-
-    res.json({
-      message: "Login successful",
-      token: tokenCreate(user),
-      user: { 
-        id: user._id, 
-        name: user.name, 
-        email: user.email, 
-        avatar: user.avatar, 
-        provider: user.provider,
-        role: user.role 
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Google Login failed: " + error.message });
-  }
-};
-
-
 
 exports.profile = async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");

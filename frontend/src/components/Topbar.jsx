@@ -9,7 +9,6 @@ import {
   LogOut,
   Moon,
   Sun,
-  Monitor,
   X,
   AlertTriangle,
   Info,
@@ -22,28 +21,45 @@ import "../styles/topbar.css";
 
 function Topbar() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+
+  let user = {};
+  try {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser && storedUser !== "undefined") {
+      user = JSON.parse(storedUser);
+    }
+  } catch (err) {
+    console.error("Failed to parse user data:", err);
+  }
+
   const [userOpen, setUserOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [notifTab, setNotifTab] = useState("all");
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [notifications, setNotifications] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  const logoutIfNoToken = (error) => {
+    if (error.response?.status === 401) {
+      localStorage.clear();
+      navigate("/login");
+      return true;
+    }
+    return false;
+  };
+
   const loadNotifications = async () => {
     try {
       const res = await API.get("/notifications");
       setNotifications(res.data);
     } catch (error) {
-      // Failed to load notifications
+      if (!logoutIfNoToken(error)) {
+        console.error("Failed to load notifications:", error.message);
+      }
     }
   };
 
@@ -55,32 +71,14 @@ function Topbar() {
     loadNotifications();
   }, []);
 
-  useEffect(() => {
-    const fetchSearch = async () => {
-      if (searchQuery.trim().length > 1) {
-        try {
-          const res = await API.get(`/customers?search=${searchQuery}`);
-          setSearchResults(res.data);
-          setSearchOpen(true);
-        } catch (error) {
-          // Search failed
-        }
-      } else {
-        setSearchResults([]);
-        setSearchOpen(false);
-      }
-    };
-
-    const debounce = setTimeout(fetchSearch, 300);
-    return () => clearTimeout(debounce);
-  }, [searchQuery]);
-
   const markAsRead = async (id) => {
     try {
       await API.put(`/notifications/${id}/read`);
       loadNotifications();
     } catch (error) {
-      // Failed to mark as read
+      if (!logoutIfNoToken(error)) {
+        console.error("Failed to mark as read:", error.message);
+      }
     }
   };
 
@@ -89,7 +87,9 @@ function Topbar() {
       await API.delete("/notifications");
       setNotifications([]);
     } catch (error) {
-      // Failed to clear notifications
+      if (!logoutIfNoToken(error)) {
+        console.error("Failed to clear notifications:", error.message);
+      }
     }
   };
 
@@ -107,87 +107,27 @@ function Topbar() {
   return (
     <header className="topbar-header">
       <div className="topbar-left">
-        <div style={{ position: "relative" }}>
-          <button
-            className={`history-btn ${historyOpen ? 'active' : ''}`}
-            title="Recent History"
-            onClick={() => { setHistoryOpen(!historyOpen); setNotifOpen(false); setUserOpen(false); }}
-          >
-            <History size={20} />
-          </button>
-
-          {historyOpen && (
-            <div className="history-dropdown">
-              <div className="history-header">
-                <h3>RECENT ACTIVITIES</h3>
-              </div>
-
-              <div className="history-body">
-                <img src="/images/recent-activities.png" alt="No activities" className="empty-history-img" />
-                <p className="empty-history-main">Your activities in Quick Inventory will show up here!</p>
-                <div className="history-divider"></div>
-                <p className="empty-history-sub">Create your first transaction to get started with Quick Inventory.</p>
-              </div>
-
-              <div className="history-footer">
-                <div className="quick-action" onClick={() => { navigate("/sales-orders"); setHistoryOpen(false); }}>
-                  <Plus size={16} />
-                  <span>Create Invoice</span>
-                </div>
-                <div className="quick-action" onClick={() => { navigate("/purchase-orders"); setHistoryOpen(false); }}>
-                  <Plus size={16} />
-                  <span>Create Bill</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <button className="history-btn" title="Recent History">
+          <History size={20} />
+        </button>
 
         <div className="topbar-search-wrapper">
+          <div className="search-category-select">
+            <Search size={18} />
+            <ChevronDown size={14} />
+          </div>
           <input
             type="text"
             className="topbar-search-input"
-            placeholder="Search in Customers"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => searchQuery.length > 1 && setSearchOpen(true)}
+            placeholder="Search in Customers ( / )"
           />
-
-          {searchOpen && searchResults.length > 0 && (
-            <div className="search-results-dropdown">
-              <div className="search-results-header">
-                Customers ({searchResults.length})
-              </div>
-              <div className="search-results-list">
-                {searchResults.map(customer => (
-                  <div
-                    key={customer._id}
-                    className="search-result-item"
-                    onClick={() => {
-                      navigate(`/customers`);
-                      setSearchOpen(false);
-                      setSearchQuery("");
-                    }}
-                  >
-                    <div className="result-avatar">
-                      {customer.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="result-info">
-                      <div className="result-name">{customer.name}</div>
-                      <div className="result-email">{customer.email}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
       <div className="topbar-right" style={{ position: "relative" }}>
 
         <div className="user-display-name" onClick={() => { setUserOpen(!userOpen); setNotifOpen(false); }}>
-          <span>{user.name || "info tech"}</span>
+          <span>{user.name || "User"}</span>
           <ChevronDown size={14} />
         </div>
 
@@ -200,6 +140,7 @@ function Topbar() {
             {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
           </button>
 
+          {/* Notification Bell */}
           <div style={{ position: "relative" }}>
             <button
               className="topbar-icon-btn"
@@ -234,8 +175,6 @@ function Topbar() {
                 <div className="notif-header">
                   <h3>Notifications</h3>
                   <div className="notif-header-actions">
-                    <Monitor size={18} style={{ cursor: "pointer" }} />
-                    <Settings size={18} style={{ cursor: "pointer" }} />
                     <X size={20} style={{ cursor: "pointer" }} onClick={() => setNotifOpen(false)} />
                   </div>
                 </div>
@@ -353,6 +292,7 @@ function Topbar() {
             style={{ cursor: "pointer" }}
           />
 
+          {/* User Dropdown */}
           {userOpen && (
             <div style={{
               position: "absolute",

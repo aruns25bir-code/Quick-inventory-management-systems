@@ -1,1 +1,1 @@
-﻿Quick Inventory Management Systems
+﻿Quick Inventory Management System

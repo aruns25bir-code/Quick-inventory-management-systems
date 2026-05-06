@@ -30,7 +30,6 @@ exports.clearNotifications = async (req, res) => {
   }
 };
 
-// Internal helper for other controllers
 exports.createNotification = async (data) => {
   try {
     const exists = await Notification.findOne({ message: data.message, read: false });
