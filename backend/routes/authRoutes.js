@@ -1,10 +1,9 @@
 const router = require("express").Router();
 const auth = require("../middleware/auth");
-const { register, login, googleLogin, profile, getLoginHistory, getUsers, changePassword } = require("../controllers/authController");
+const { register, login, profile, getLoginHistory, getUsers, changePassword } = require("../controllers/authController");
 
 router.post("/register", register);
 router.post("/login", login);
-router.post("/google-login", googleLogin);
 
 
 router.get("/profile", auth, profile);
