@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-primary: #f6f8ff;
+  --bg-secondary: #ffffff;
+  --text-primary: #101735;
+  --text-secondary: #64748b;
+  --border-color: #e5e7eb;
+  --sidebar-bg: #1e3a8a;
+  --sidebar-text: #ffffff;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --sidebar-bg: #020617;
+  --sidebar-text: #f8fafc;
+  --card-bg: #1e293b;
+  --input-bg: #334155;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+button, a {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.glass-effect {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+}
+
+/* Remove Arrows/Spinners from Number Inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
