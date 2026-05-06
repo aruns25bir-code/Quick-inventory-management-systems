@@ -61,6 +61,7 @@ function Sidebar() {
         </div>
 
         <NavLink to="/products"><Package size={20} /> Products</NavLink>
+        <NavLink to="/categories"><Layers size={20} /> Categories</NavLink>
         <NavLink to="/suppliers"><Users size={20} /> Suppliers</NavLink>
         <NavLink to="/customers"><Users size={20} /> Customers</NavLink>
 

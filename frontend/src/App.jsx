@@ -18,6 +18,7 @@ import LoginHistory from "./pages/LoginHistory";
 import UsersList from "./pages/UsersList";
 import About from "./pages/About";
 import Home from "./pages/Home";
+import Categories from "./pages/Categories";
 
 
 
@@ -37,6 +38,7 @@ function App() {
 
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
+        <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
         <Route path="/suppliers" element={<ProtectedRoute><Suppliers /></ProtectedRoute>} />
         
         <Route path="/inventory/all" element={<ProtectedRoute><AllStock /></ProtectedRoute>} />
